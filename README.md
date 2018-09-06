@@ -6,7 +6,7 @@ Code will be updated in Oct.
 - DenseASPP
 ## Dataset
 - CityScapes
-- CoCO(TBD)
+- CoCo(TBD)
 - ADE(TBD)
 ## Results
 TBD
