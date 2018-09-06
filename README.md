@@ -9,4 +9,13 @@ Code will be updated in Oct.
 - CoCo(TBD)
 - ADE(TBD)
 ## Results
-TBD
+
+### CityScapes
+|Algorithm|Model|Batch Size|Performance|Data|
+|:------|:-------|:--------|:-------|:-------|
+|DenseASPP|DenseASPP161|16|78.4%|Only fine|
+|DenseASPP|DenseASPP209|-|-|Only fine|
+|PSPNet|ResNet50|||Only fine|
+|PSPNet|ResNet101|||Only fine|
+|UPerNet|ResNet50|||Only fine|
+|UPerNet|ResNet101|||Only fine|
