@@ -1,6 +1,9 @@
-# PLUS Segmentation
+<img src="./src/images/plusseg_logo.png" align="middle" width="1000"/>
+
 
 ## Introduction
+<img align="left" width="100" height="100" src="./src/images/plusseg_logo_square.png">
+
 The master branch works with **PyTorch 1.1** or higher
 
 plusseg is an open source image semantic segmentation toolbox based on PyTorch. It is a part of the plus project developed by [ShanghaiTech PLUS Lab](http://plus.sist.shanghaitech.edu.cn)
