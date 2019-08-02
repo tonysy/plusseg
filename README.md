@@ -1,4 +1,4 @@
-<img src="./src/images/plusseg_logo.png" align="middle" width="1000"/>
+<img src="./src/images/plusseg_logo.png" align="middle" width="800"/>
 
 
 ## Introduction
