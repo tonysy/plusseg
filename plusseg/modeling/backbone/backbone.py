@@ -37,4 +37,18 @@ def build_resnet_fpn_backbone(cfg):
         conv_block=conv_with_kaiming_uniform(
             cfg.MODEL.FPN.USE_GN, cfg.MODEL.FPN.USE_RELU
         ),
+        top_blocks=fpn_module.LastLevelMaxPool(),
     )
+    model = nn.Sequential(OrderedDict[("body", body), ("fpn", fpn)])
+    model.out_channels = out_channels
+
+    return model
+
+
+def build_backbone(cfg):
+    assert cfg.MODEL.BACKBONES.CONV_BODY in registry.BACKBONES, \
+        "cfg.MODEL.BACKBONE.CONV_BODY: {} are not registered in registry".format(
+            cfg.MODEL.BACKBONE.CONV_BODY
+        )
+
+    return registry.BACKBONES[cfg.MODEL.BACKBONE.CONV_BODY](cfg)

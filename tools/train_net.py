@@ -15,7 +15,7 @@ from plusseg.data import make_data_loader
 from plusseg.solver import make_lr_scheduler
 from plusseg.solver import make_optimizer
 
-from plusseg.engine.inference import inference
+# from plusseg.engine.inference import inference
 from plusseg.engine.trainer import do_train
 
 from plusseg.modeling.segmentor import build_segmentation_model

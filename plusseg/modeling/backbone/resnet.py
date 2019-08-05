@@ -3,11 +3,17 @@ Variant of the resnet module that takes cfg as an argument
 
 Example usage. Strings may be specified in the config file.
 
-model = ResNet(
-    "StemFixedBatchNorm",
-    "BottleneckWithFixedBatchNorm",
-    "ResNet50StageTo5",
-)
+    model = ResNet(
+        "StemWithSyncBN",
+        "BottleneckWithSyncBN",
+        "ResNet50StagesTo5",
+    )
+OR:
+    model = ResNet(
+        "StemWithGN",
+        "BottleneckWithGN",
+        "ResNet50StagesTo5",
+    )
 Custom implementations may be written in user code and hooked in via the `register_*`
 """
 from collections import namedtuple
@@ -16,11 +22,15 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from plusseg.layers import FrozenBatchNorm2d
 from plusseg.layers import Conv2d
-from plusseg.layers import DFConv2d
 from plusseg.modeling.make_layers import group_norm
-from maskrcnn_benchmark.utils.registry import Registry
+from plusseg.utils.registry import Registry
+
+try:
+    from apex.parallel import SyncBatchNorm, DistributedDataParallel
+except ImportError:
+    raise ImportError(
+        "Please install apex from https://www.github.com/nvidia/apex .")
 
 
 # ResNet stage specification
@@ -41,22 +51,31 @@ ResNet50StagesTo5 = tuple(
     StageSpec(index=i, block_count=c, return_features=r)
     for (i, c, r) in ((1, 3, False), (2, 4, False), (3, 6, False), (4, 3, True))
 )
-# ResNet-50 up to stage 4 (excludes stage 5)
-ResNet50StagesTo4 = tuple(
-    StageSpec(index=i, block_count=c, return_features=r)
-    for (i, c, r) in ((1, 3, False), (2, 4, False), (3, 6, True))
-)
+# # ResNet-50 up to stage 4 (excludes stage 5)
+# ResNet50StagesTo4 = tuple(
+#     StageSpec(index=i, block_count=c, return_features=r)
+#     for (i, c, r) in ((1, 3, False), (2, 4, False), (3, 6, True))
+# )
 # ResNet-101 (including all stages)
 ResNet101StagesTo5 = tuple(
     StageSpec(index=i, block_count=c, return_features=r)
     for (i, c, r) in ((1, 3, False), (2, 4, False), (3, 23, False), (4, 3, True))
 )
 # ResNet-101 up to stage 4 (excludes stage 5)
-ResNet101StagesTo4 = tuple(
+# ResNet101StagesTo4 = tuple(
+#     StageSpec(index=i, block_count=c, return_features=r)
+#     for (i, c, r) in ((1, 3, False), (2, 4, False), (3, 23, True))
+# )
+
+# ResNet-152-FPN (including all stages)
+ResNet152StagesTo5 = tuple(
     StageSpec(index=i, block_count=c, return_features=r)
-    for (i, c, r) in ((1, 3, False), (2, 4, False), (3, 23, True))
+    for (i, c, r) in ((1, 3, False), (2, 8, False), (3, 36, False), (4, 3, True))
 )
-# ResNet-50-FPN (including all stages)
+
+
+########## FPN
+# # ResNet-50-FPN (including all stages)
 ResNet50FPNStagesTo5 = tuple(
     StageSpec(index=i, block_count=c, return_features=r)
     for (i, c, r) in ((1, 3, True), (2, 4, True), (3, 6, True), (4, 3, True))
@@ -360,7 +379,7 @@ class BaseStem(nn.Module):
         return x
 
 
-class BottleneckWithFixedBatchNorm(Bottleneck):
+class BottleneckWithSyncBN(Bottleneck):
     def __init__(
         self,
         in_channels,
@@ -372,7 +391,7 @@ class BottleneckWithFixedBatchNorm(Bottleneck):
         dilation=1,
         dcn_config={}
     ):
-        super(BottleneckWithFixedBatchNorm, self).__init__(
+        super(BottleneckWithSyncBN, self).__init__(
             in_channels=in_channels,
             bottleneck_channels=bottleneck_channels,
             out_channels=out_channels,
@@ -380,15 +399,15 @@ class BottleneckWithFixedBatchNorm(Bottleneck):
             stride_in_1x1=stride_in_1x1,
             stride=stride,
             dilation=dilation,
-            norm_func=FrozenBatchNorm2d,
+            norm_func=SyncBatchNorm,
             dcn_config=dcn_config
         )
 
 
-class StemWithFixedBatchNorm(BaseStem):
+class StemWithSyncBN(BaseStem):
     def __init__(self, cfg):
-        super(StemWithFixedBatchNorm, self).__init__(
-            cfg, norm_func=FrozenBatchNorm2d
+        super(StemWithSyncBN, self).__init__(
+            cfg, norm_func=SyncBatchNorm
         )
 
 
@@ -423,23 +442,26 @@ class StemWithGN(BaseStem):
 
 
 _TRANSFORMATION_MODULES = Registry({
-    "BottleneckWithFixedBatchNorm": BottleneckWithFixedBatchNorm,
+    "BottleneckWithSyncBN": BottleneckWithSyncBN,
     "BottleneckWithGN": BottleneckWithGN,
 })
 
 _STEM_MODULES = Registry({
-    "StemWithFixedBatchNorm": StemWithFixedBatchNorm,
+    "StemWithSyncBN": StemWithSyncBN,
     "StemWithGN": StemWithGN,
+    
 })
 
 _STAGE_SPECS = Registry({
-    "R-50-C4": ResNet50StagesTo4,
+    # "R-50-C4": ResNet50StagesTo4,
     "R-50-C5": ResNet50StagesTo5,
-    "R-101-C4": ResNet101StagesTo4,
+    # "R-101-C4": ResNet101StagesTo4,
     "R-101-C5": ResNet101StagesTo5,
+    "R-152-C5": ResNet152StagesTo5,
+    
     "R-50-FPN": ResNet50FPNStagesTo5,
-    "R-50-FPN-RETINANET": ResNet50FPNStagesTo5,
+    # "R-50-FPN-RETINANET": ResNet50FPNStagesTo5,
     "R-101-FPN": ResNet101FPNStagesTo5,
-    "R-101-FPN-RETINANET": ResNet101FPNStagesTo5,
+    # "R-101-FPN-RETINANET": ResNet101FPNStagesTo5,
     "R-152-FPN": ResNet152FPNStagesTo5,
 })
