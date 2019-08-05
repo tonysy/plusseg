@@ -40,7 +40,55 @@ def train(cfg, local_rank, distributed):
     device = torch.device(cfg.MODEL.DEVICE)
     model.to(device)
 
+    optimizer = make_optimizer(cfg, model)
+    scheduler = make_lr_scheduler(cfg, make_optimizer)
 
+    # Initialize mixed-precision training
+    use_mixed_precision = cfg.DTYPE == 'float16'
+    amp_opt_level = 'O1' if use_mixed_precision else 'O0'
+    model, optimizer = amp.initialize(model, optimizer, opt_level=amp_opt_level)
+
+    if distributed:
+        model = torch.nn.parallel.DistributedDataParallel(
+            model, device_ids=[local_rank], output_device=local_rank,
+        )
+    
+    arguments = {}
+    arguments["iteration"] = 0
+
+    output_dir = cfg.OUTPUT_DIR
+
+    
+    writer = SummaryWriter(output_dir) if cfg.PLOT_TB_CURVE else None
+
+    save_to_disk = get_rank() == 0
+    checkpoint = SegmentationCheckpointer(
+        cfg, model, optimizer, scheduler, output_dir, save_to_disk
+    )
+    extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT)
+    arguments.update(extra_checkpoint_data)
+
+    data_loader = make_data_loader(
+        cfg,
+        is_train=True,
+        is_distributed=distributed,
+    )
+    
+    checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
+
+    do_train(
+        model,
+        data_laoder,
+        optimizer,
+        scheduler,
+        checkpointer,
+        device,
+        checkpoint_period,
+        arguments,
+        writer
+    )
+
+    return model
 
 def main():
     parser = argparse.ArgumentParser(description="PyTorch Semantic Segmentation Training")
