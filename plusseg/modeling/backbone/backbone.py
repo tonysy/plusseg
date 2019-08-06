@@ -5,7 +5,7 @@ from torch import nn
 from plusseg.modeling import registry
 from plusseg.modeling.make_layers import conv_with_kaiming_uniform
 
-from . import fpng as fpn_module
+from . import fpn as fpn_module
 from . import resnet
 from . import densenet
 
@@ -15,7 +15,7 @@ from . import densenet
 def build_resnet_backbone(cfg):
     body = resnet.ResNet(cfg)
     model = nn.Sequential(OrderedDict([("body", body)]))
-    model.out_channels = cfg.MODEL.RESNETS.BACKBONE_OUT_CHANNELS
+    model.out_channels = cfg.MODEL.ENCODER.BACKBONE.RESNETS.BACKBONE_OUT_CHANNELS
 
     return model
 
@@ -24,8 +24,8 @@ def build_resnet_backbone(cfg):
 @registry.BACKBONES.register("R-152-FPN")
 def build_resnet_fpn_backbone(cfg):
     body = resnet.ResNet(cfg)
-    in_channel_stage2 = cfg.MODEL.RESNETS.RES2_OUT_CHANNELS
-    out_channels = cfg.MODEL.RESNETS.BACKBONE_OUT_CHANNELS
+    in_channel_stage2 = cfg.MODEL.ENCODER.BACKBONE.RESNETS.RES2_OUT_CHANNELS
+    out_channels = cfg.MODEL.ENCODER.BACKBONE.RESNETS.BACKBONE_OUT_CHANNELS
     fpn = fpn_module.FPN(
         in_channels_list=[
             in_channel_stage2,
@@ -46,9 +46,9 @@ def build_resnet_fpn_backbone(cfg):
 
 
 def build_backbone(cfg):
-    assert cfg.MODEL.BACKBONES.CONV_BODY in registry.BACKBONES, \
-        "cfg.MODEL.BACKBONE.CONV_BODY: {} are not registered in registry".format(
-            cfg.MODEL.BACKBONE.CONV_BODY
+    assert cfg.MODEL.ENCODER.BACKBONE.CONV_BODY in registry.BACKBONES, \
+        "cfg.MODEL.ENCODER.BACKBONE.CONV_BODY: {} are not registered in registry".format(
+            cfg.MODEL.ENCODER.BACKBONE.CONV_BODY
         )
-
-    return registry.BACKBONES[cfg.MODEL.BACKBONE.CONV_BODY](cfg)
+    # import pdb; pdb.set_trace()
+    return registry.BACKBONES[cfg.MODEL.ENCODER.BACKBONE.CONV_BODY](cfg)

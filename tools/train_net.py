@@ -35,7 +35,7 @@ except ImportError:
 
 
 
-def train(cfg, local_rank, distributed):
+def train(cfg, local_rank, distributed, no_validate):
     model = build_segmentation_model(cfg)
     device = torch.device(cfg.MODEL.DEVICE)
     model.to(device)
@@ -85,6 +85,7 @@ def train(cfg, local_rank, distributed):
         device,
         checkpoint_period,
         arguments,
+        no_validate,
         writer
     )
 
@@ -105,12 +106,12 @@ def main():
         "--no-validate",
         dest='no_validate',
         help="Dont validate after each epoch",
-        action="store_ture",
+        action="store_true",
     )
 
     parser.add_argument(
         "opts",
-        hlep='Modify config options using the command-line',
+        help='Modify config options using the command-line',
         default=None,
         nargs=argparse.REMAINDER,
     )
@@ -142,7 +143,7 @@ def main():
     
     logger.info("Loaded configuration file {}".format(args.config_file))
     with open(args.config_file, 'r') as cf:
-        config_str = "\n" +cfg.read()
+        config_str = "\n" + cf.read()
         logger.info(config_str)
 
     logger.info("Running with config: \n{}".format(cfg))

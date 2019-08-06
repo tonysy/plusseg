@@ -52,6 +52,9 @@ _C.DATALOADER.SIZE_DIVISIBILITY = 0
 # Model
 # -----------------------------------------------------------------------------
 _C.MODEL = CN()
+_C.MODEL.META_ARCHITECTURE = 'GeneralizeSegmentor'
+_C.MODEL.BATCH_NORM = 'SyncBatchNorm' # nn.BatchNorm2d
+_C.MODEL.DEVICE = "cuda"
 
 # -----------------------------------------------------------------------------
 # Encoder Structure
@@ -61,10 +64,61 @@ _C.MODEL.ENCODER = CN()
 # Backbone for encoder structure
 _C.MODEL.ENCODER.BACKBONE = CN()
 # Dilate Convolution used for the last 3 stages
-_C.MODEL.ENCODER.BACKBONE.DILATION = False
+_C.MODEL.ENCODER.BACKBONE.CONV_BODY = "R-50-C5"
 
+_C.MODEL.ENCODER.BACKBONE.DILATION = False
+# Add StopGrad at a specified stage so the bottom layers are frozen
+_C.MODEL.ENCODER.BACKBONE.FREEZE_CONV_BODY_AT = -1 # -1 means no frozen
+
+
+# ResNet structure
+_C.MODEL.ENCODER.BACKBONE.RESNETS = CN()
+_C.MODEL.ENCODER.BACKBONE.RESNETS.STRIDE_IN_1X1 = True
+
+_C.MODEL.ENCODER.BACKBONE.RESNETS.STEM_FUNC = 'StemWithSyncBN'
+_C.MODEL.ENCODER.BACKBONE.RESNETS.TRANS_FUNC = 'BottleneckWithSyncBN'
+_C.MODEL.ENCODER.BACKBONE.RESNETS.STEM_OUT_CHANNELS = 64
+_C.MODEL.ENCODER.BACKBONE.RESNETS.RES2_OUT_CHANNELS = 256
+_C.MODEL.ENCODER.BACKBONE.RESNETS.NUM_GROUPS = 1
+_C.MODEL.ENCODER.BACKBONE.RESNETS.WIDTH_PER_GROUP = 64
+
+_C.MODEL.ENCODER.BACKBONE.RESNETS.BACKBONE_OUT_CHANNELS = 256 * 8
+
+_C.MODEL.ENCODER.BACKBONE.RESNETS.RES5_DILATION = 1
+
+_C.MODEL.ENCODER.BACKBONE.RESNETS.STAGE_WITH_DCN = (False, False, False, False)
+_C.MODEL.ENCODER.BACKBONE.RESNETS.WITH_MODULATED_DCN = False
+_C.MODEL.ENCODER.BACKBONE.RESNETS.DEFORMABLE_GROUPS = 1
+
+
+# -----------------------------------------------------------------------------
+# Decoder Structure
+# -----------------------------------------------------------------------------
+_C.MODEL.DECODER = CN()
+_C.MODEL.DECODER.NAME = 'FCN'
+_C.MODEL.DECODER.AUX_FACTOR = 0.2
+
+_C.MODEL.DECODER.FCN = CN()
+_C.MODEL.DECODER.FCN.IN_CHANNEL = 2048
+_C.MODEL.DECODER.FCN.CHANNEL_STRIDE = 4
+_C.MODEL.DECODER.FCN.AUX_IN_CHANNEL = 1024
+_C.MODEL.DECODER.FCN.DROPOUT = 0.1
+_C.MODEL.DECODER.FCN.OUT_CHANNEL = 59
+
+_C.MODEL.POSTPROCESSOR = CN()
+_C.MODEL.POSTPROCESSOR.NAME = ''
 
 # -----------------------------------------------------------------------------
 # Solver
 # -----------------------------------------------------------------------------
 _C.SOLVER = CN()
+
+
+
+
+# -----------------------------------------------------------------------------
+# Misc Options
+# -----------------------------------------------------------------------------
+_C.OUTPUT_DIR = "."
+
+_C.COLLECT_ENV_INFO = False

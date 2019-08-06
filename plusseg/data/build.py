@@ -8,9 +8,9 @@ from plusseg.utils.comm import get_world_size
 from plusseg.utils.imports import import_file
 
 from . import datasets as D
-from . import samplers
+# from . import samplers
 
-from .transforms import build_transfroms
+from .transforms import build_transforms
 
 def build_dataset(dataset_list, transfroms, dataset_catalog, is_train=True):
     """

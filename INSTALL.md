@@ -4,6 +4,8 @@ Requirements:
 - PyTorch > 1.1.0
 - torchvision
 - yacs
+- tqdm
+
 
 ## Step-by-step installation
 

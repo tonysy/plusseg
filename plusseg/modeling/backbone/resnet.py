@@ -100,19 +100,19 @@ class ResNet(nn.Module):
         # self.cfg = cfg.clone()
 
         # Translate string names to implementations
-        stem_module = _STEM_MODULES[cfg.MODEL.RESNETS.STEM_FUNC]
-        stage_specs = _STAGE_SPECS[cfg.MODEL.BACKBONE.CONV_BODY]
-        transformation_module = _TRANSFORMATION_MODULES[cfg.MODEL.RESNETS.TRANS_FUNC]
+        stem_module = _STEM_MODULES[cfg.MODEL.ENCODER.BACKBONE.RESNETS.STEM_FUNC]
+        stage_specs = _STAGE_SPECS[cfg.MODEL.ENCODER.BACKBONE.CONV_BODY]
+        transformation_module = _TRANSFORMATION_MODULES[cfg.MODEL.ENCODER.BACKBONE.RESNETS.TRANS_FUNC]
 
         # Construct the stem module
         self.stem = stem_module(cfg)
 
         # Constuct the specified ResNet stages
-        num_groups = cfg.MODEL.RESNETS.NUM_GROUPS
-        width_per_group = cfg.MODEL.RESNETS.WIDTH_PER_GROUP
-        in_channels = cfg.MODEL.RESNETS.STEM_OUT_CHANNELS
+        num_groups = cfg.MODEL.ENCODER.BACKBONE.RESNETS.NUM_GROUPS
+        width_per_group = cfg.MODEL.ENCODER.BACKBONE.RESNETS.WIDTH_PER_GROUP
+        in_channels = cfg.MODEL.ENCODER.BACKBONE.RESNETS.STEM_OUT_CHANNELS
         stage2_bottleneck_channels = num_groups * width_per_group
-        stage2_out_channels = cfg.MODEL.RESNETS.RES2_OUT_CHANNELS
+        stage2_out_channels = cfg.MODEL.ENCODER.BACKBONE.RESNETS.RES2_OUT_CHANNELS
         self.stages = []
         self.return_features = {}
         for stage_spec in stage_specs:
@@ -120,7 +120,7 @@ class ResNet(nn.Module):
             stage2_relative_factor = 2 ** (stage_spec.index - 1)
             bottleneck_channels = stage2_bottleneck_channels * stage2_relative_factor
             out_channels = stage2_out_channels * stage2_relative_factor
-            stage_with_dcn = cfg.MODEL.RESNETS.STAGE_WITH_DCN[stage_spec.index -1]
+            stage_with_dcn = cfg.MODEL.ENCODER.BACKBONE.RESNETS.STAGE_WITH_DCN[stage_spec.index -1]
             module = _make_stage(
                 transformation_module,
                 in_channels,
@@ -128,12 +128,12 @@ class ResNet(nn.Module):
                 out_channels,
                 stage_spec.block_count,
                 num_groups,
-                cfg.MODEL.RESNETS.STRIDE_IN_1X1,
+                cfg.MODEL.ENCODER.BACKBONE.RESNETS.STRIDE_IN_1X1,
                 first_stride=int(stage_spec.index > 1) + 1,
                 dcn_config={
                     "stage_with_dcn": stage_with_dcn,
-                    "with_modulated_dcn": cfg.MODEL.RESNETS.WITH_MODULATED_DCN,
-                    "deformable_groups": cfg.MODEL.RESNETS.DEFORMABLE_GROUPS,
+                    "with_modulated_dcn": cfg.MODEL.ENCODER.BACKBONE.RESNETS.WITH_MODULATED_DCN,
+                    "deformable_groups": cfg.MODEL.ENCODER.BACKBONE.RESNETS.DEFORMABLE_GROUPS,
                 }
             )
             in_channels = out_channels
@@ -142,7 +142,7 @@ class ResNet(nn.Module):
             self.return_features[name] = stage_spec.return_features
 
         # Optionally freeze (requires_grad=False) parts of the backbone
-        self._freeze_backbone(cfg.MODEL.BACKBONE.FREEZE_CONV_BODY_AT)
+        self._freeze_backbone(cfg.MODEL.ENCODER.BACKBONE.FREEZE_CONV_BODY_AT)
 
     def _freeze_backbone(self, freeze_at):
         if freeze_at < 0:
@@ -361,7 +361,7 @@ class BaseStem(nn.Module):
     def __init__(self, cfg, norm_func):
         super(BaseStem, self).__init__()
 
-        out_channels = cfg.MODEL.RESNETS.STEM_OUT_CHANNELS
+        out_channels = cfg.MODEL.ENCODER.BACKBONE.RESNETS.STEM_OUT_CHANNELS
 
         self.conv1 = Conv2d(
             3, out_channels, kernel_size=7, stride=2, padding=3, bias=False

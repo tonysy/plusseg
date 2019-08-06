@@ -8,7 +8,7 @@ class FPN(nn.Module):
     The feature maps are currently supposed to be in increasing depth order, and must be consecutive
     """
     def __init__(
-        self, in_channels_list, out_channels, conv_block, top_blocks=None
+        self, in_channel_list, out_channels, conv_block, top_blocks=None
     ):
         """
         Arguments:

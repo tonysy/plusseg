@@ -8,7 +8,7 @@ from torch import nn
 # from plusseg.structures
 from ..backbone import build_backbone
 from ..decoder import build_decoder
-from ..postprocess import build_post_processor
+from ..postprocessor import build_post_processor
 
 class GeneralizeSegmentor(nn.Module):
     """
@@ -23,7 +23,7 @@ class GeneralizeSegmentor(nn.Module):
         super(GeneralizeSegmentor, self).__init__()
 
         self.backbone = build_backbone(cfg)
-        self.decoder = build_decoder(cfg, self.backbone.out_channels)
+        self.decoder = build_decoder(cfg)
         self.postprocessor = build_post_processor(cfg)
 
     def forward(self, images, targets=None):
