@@ -6,3 +6,4 @@ github/
 __pycache__/
 
 save_dir/
+datasets/

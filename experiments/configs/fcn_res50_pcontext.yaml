@@ -1,2 +1,10 @@
+MODEL:
+  WEIGHT: "catalog://ImageNetPretrained/MSRA/R-50"
+  ENCODER:   
+    BACKBONE:
+      CONV_BODY: "R-50-C45"
 OUTPUT_DIR: "save_dir/default"
 
+DATASETS:
+  TRAIN: ("pascal_context_train",)
+  TEST: ("pascal_context_test",)

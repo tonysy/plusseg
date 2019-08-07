@@ -10,6 +10,8 @@ from ..backbone import build_backbone
 from ..decoder import build_decoder
 from ..postprocessor import build_post_processor
 
+from ..decoder import SegmentationLossComputation
+
 class GeneralizeSegmentor(nn.Module):
     """
     Main class for Generalized Segmentation Model. Current support semantic segmentation
@@ -24,7 +26,11 @@ class GeneralizeSegmentor(nn.Module):
 
         self.backbone = build_backbone(cfg)
         self.decoder = build_decoder(cfg)
-        self.postprocessor = build_post_processor(cfg)
+        # self.postprocessor = build_post_processor(cfg)
+        self.loss_calculator = SegmentationLossComputation(
+            aux_factor = cfg.MODEL.DECODER.AUX_FACTOR,
+            ignore_index = cfg.MODEL.DECODER.IGNORE_INDEX
+        )
 
     def forward(self, images, targets=None):
         """
@@ -40,17 +46,16 @@ class GeneralizeSegmentor(nn.Module):
         
         # images = to_image_list(images)
         features = self.backbone(images)
-
-        decoder_out = self.decoder(features)
-
-        if self.postprocessor:
-            final_out = self.postprocessor(decoder_out)
-        else:
-            final_out = decoder_out
-        
+        # imsize = [images.size()[-2], images.size()[-1]]
+        final_out = self.decoder(features, images.size()[2:])
+        # if self.postprocessor:
+        #     final_out = self.postprocessor(decoder_out)
+        # else:
+        #     final_out = decoder_out
         
         if self.training:
-            segmentation_loss = self.loss_calculator(final_out, targets)
-            return final_out, segmentation_loss
+            seg_loss = self.loss_calculator(final_out, targets)
+            
+            return final_out, dict(seg_loss=seg_loss)
         
         return final_out

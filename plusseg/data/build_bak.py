@@ -1,55 +1,33 @@
-# Copyright (c) ShanghaiTech PLUS Lab. All Rights Reserved.
-import bisect
-import copy
+# # Copyright (c) ShanghaiTech PLUS Lab. All Rights Reserved.
+# import bisect
+# import copy
 import logging
 
-import torch.utils.data
+# import torch.utils.data
 from plusseg.utils.comm import get_world_size
 from plusseg.utils.imports import import_file
 
-from . import datasets as D
+# from . import datasets as D
 from . import samplers
 
-from .transforms import build_transforms
+# from .transforms import build_transforms
 
-def build_dataset(dataset_list, 
-        # transfroms, 
-        dataset_catalog, 
-        is_train=True):
+from .base_dataset import BaseDataset
+from .datasets import PascalContextSegDataset
+
+datasets = {
+    "coco": None,
+    "pcontext": PascalContextSegDataset
+}
+
+def build_dataset(cfg):
     """
     Arguments:
-        dataset_list (list[str]): Contains the names of the datasets, i.e.,
-            ade20k_train, ade20k_val, etc
-        # transforms (callable): transforms to apply to each (image, target) sample
-        dataset_catalog (DatasetCatalog): contains the information on how to construct a dataset.
-        is_train (bool): whether to setup the dataset for training or testing
+        cfg: (dict) configureation parameters
     """
-    if not isinstance(dataset_list, (list, tuple)):
-        raise RuntimeError(
-            "dataset_list should be a list of strings, got {}".format(dataset_list)
-        )
+    dataset_name = cfg.DATASET.NAME
+    return datasets[dataset_name.lower()](cfg)
 
-    datasets = []
-    for dataset_name in dataset_list:
-        data = dataset_catalog.get(dataset_name)
-        # import pdb; pdb.set_trace()
-        factory = getattr(D, data['factory'])
-        args = data["args"]
-
-        # args["transforms"] = transfroms
-        # make dataset from factory
-        dataset = factory(**args)
-        datasets.append(dataset)
-
-    # for testing, return a list of datasets
-    if not is_train:
-        return datasets
-    
-    # for training, concatenate all datasets into a single one
-    dataset = datasets[0]
-    if len(datasets) > 1:
-        dataset = D.ConcatDataset(datasets)
-    return [dataset]
 
 
 def make_data_loader(cfg, is_train=True, is_distributed=False):
@@ -103,19 +81,18 @@ def make_data_loader(cfg, is_train=True, is_distributed=False):
         data_loaders = []
         for dataset in datasets:
             sampler = make_data_sampler(dataset, shuffle, is_distributed)
-            batch_sampler = make_batch_data_sampler(sampler, imgs_per_gpu)
-
             num_workers = cfg.DATALOADER.NUM_WORKERS 
             data_loader = torch.utils.data.DataLoader(
                 dataset,
                 num_workers=num_workers,     
-                batch_sampler=batch_sampler
+                sampler=sampler
             )
             data_loaders.append(data_loader)
         
         if is_train:
            assert len(data_loaders) == 1
            return data_loaders[0]
+
         return data_loaders 
 
 def make_data_sampler(dataset, shuffle, distributed):
@@ -127,11 +104,6 @@ def make_data_sampler(dataset, shuffle, distributed):
         sampler = torch.utils.data.sampler.SequentialSampler(dataset)
     return sampler
 
-def make_batch_data_sampler(sampler, images_per_batch):
-    batch_sampler = torch.utils.data.sampler.BatchSampler(
-                            sampler, images_per_batch, drop_last=False
-                    )
-    return batch_sampler
 # def make_batch_data_sampler(dataset, sampler, images_per_batch):
     # batch_sampler = torch.utils.data.sampler.BatchSampler(
         # sampler, images_per_batch, drop_last=False

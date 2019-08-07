@@ -13,7 +13,7 @@ Requirements:
 conda create --name plusseg
 conda activate plusseg
 
-pip install yacs cython tqdm
+pip install yacs cython tqdm matplotlib scikit-image
 
 # ninja yacs cython matplotlib tqdm opencv-python
 
@@ -24,5 +24,8 @@ pip install tensorboardX
 git clone https://github.com/NVIDIA/apex.git
 cd apex
 python setup.py install --cuda_ext --cpp_ext
+cd ..
 
+git clone https://github.com/zhanghang1989/detail-api
+cd detail-api/PythonAPI/ && python setup.py install
 ```

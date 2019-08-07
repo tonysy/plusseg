@@ -9,9 +9,9 @@ from . import fpn as fpn_module
 from . import resnet
 from . import densenet
 
-@registry.BACKBONES.register("R-50-C5")
-@registry.BACKBONES.register("R-101-C5")
-@registry.BACKBONES.register("R-152-C5")
+@registry.BACKBONES.register("R-50-C45")
+@registry.BACKBONES.register("R-101-C45")
+@registry.BACKBONES.register("R-152-C45")
 def build_resnet_backbone(cfg):
     body = resnet.ResNet(cfg)
     model = nn.Sequential(OrderedDict([("body", body)]))

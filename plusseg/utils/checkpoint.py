@@ -34,8 +34,8 @@ class Checkpointer(object):
         data["model"] = self.model.state_dict()
         if self.optimizer is not None:
             data["optimizer"] = self.optimizer.state_dict()
-        if self.scheduler is not None:
-            data['scheduler'] = self.scheduler.state_dict()
+        # if self.scheduler is not None:
+        #     data['scheduler'] = self.scheduler.state_dict()
 
         data.update(kwargs)
 
@@ -57,9 +57,9 @@ class Checkpointer(object):
         if "optimizer" in checkpoint and self.optimizer:
             self.logger.info("Loading optimizer from {}".format(f))
             self.optimizer.load_state_dict(checkpoint.pop("optimizer"))
-        if "scheduler" in checkpoint and self.scheduler:
-            self.logger.info("Loading scheduler from {}".format(f))
-            self.scheduler.load_state_dict(checkpoint.pop("scheduler"))
+        # if "scheduler" in checkpoint and self.scheduler:
+        #     self.logger.info("Loading scheduler from {}".format(f))
+        #     self.scheduler.load_state_dict(checkpoint.pop("scheduler"))
 
         return checkpoint 
 
@@ -109,7 +109,7 @@ class SegmentationCheckpointer(Checkpointer):
                 "plusseg.config.paths_catalog",
                 self.cfg.PATHS_CATALOG, True
             )
-            catalog_f = paths_catalog.ModelCatalog.get(f[len("catalog://"):])
+            catalog_f = paths_catalog.ModelCatalog.get(f[len("catalog://") :])
             self.logger.info("{} Points to {}".format(f, catalog_f))
             f = catalog_f
         

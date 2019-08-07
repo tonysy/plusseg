@@ -9,18 +9,25 @@ from tqdm import trange
 from plusseg.data.base_dataset import BaseDataset
 
 class PascalContextSegDataset(BaseDataset):
-    BASE_DIR = 'VOCdevkit/VOC2010'
+    # BASE_DIR = 'VOCdevkit/VOC2010'
     NUM_CLASS = 59
-    def __init__(self, root, split='train', mode=None, transform=None, target_transform=None, **kwargs):
+    def __init__(self,
+        img_dir,
+        ann_file,
+        mask_file,
+        split='train', 
+        mode=None, 
+        transform=None, 
+        target_transform=None,
+        base_size=520,
+        crop_size=480):
         super(PascalContextSegDataset, self).__init__(
-            root, split, mode, transform, target_transform, **kwargs
-        )
-
+            split, mode, transform, target_transform, base_size, crop_size)
+        
         from detail import Detail 
-        root = os.path.join(root, self.BASE_DIR)
-        ann_file = os.path.join(root, 'trainval_merged.json')
-        img_dir = os.path.join(root, 'JPEGImages')
-
+        # root = os.path.join(root, self.BASE_DIR)
+        # ann_file = os.path.join(root, 'trainval_merged.json')
+        # img_dir = os.path.join(root, 'JPEGImages')
         # Trainig mode
         self.detail = Detail(ann_file, img_dir, split)
         self.transform = transform
@@ -37,7 +44,7 @@ class PascalContextSegDataset(BaseDataset):
         ]))
 
         self.keys = np.array(range(len(self.label_mapping))).astype('uint8')
-        mask_file = os.path.join(root, self.split+'.pth')
+        # mask_file = os.path.join(root, self.split+'.pth')
         print('Pascal Context Dataset, Mask File:{}'.format(mask_file))
         if os.path.exists(mask_file):
             self.masks = torch.load(mask_file)

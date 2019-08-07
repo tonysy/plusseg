@@ -148,7 +148,7 @@ def _rename_conv_weights_for_deformable_conv_layers(state_dict, cfg):
     logger = logging.getLogger(__name__)
     logger.info("Remapping conv weights for deformable conv weights")
     layer_keys = sorted(state_dict.keys())
-    for ix, stage_with_dcn in enumerate(cfg.MODEL.RESNETS.STAGE_WITH_DCN, 1):
+    for ix, stage_with_dcn in enumerate(cfg.MODEL.ENCODER.BACKBONE.RESNETS.STAGE_WITH_DCN, 1):
         if not stage_with_dcn:
             continue
         for old_key in layer_keys:
@@ -179,9 +179,9 @@ _C2_STAGE_NAMES = {
 C2_FORMAT_LOADER = Registry()
 
 
-@C2_FORMAT_LOADER.register("R-50-C5")
-@C2_FORMAT_LOADER.register("R-101-C5")
-@C2_FORMAT_LOADER.register("R-152-C5")
+@C2_FORMAT_LOADER.register("R-50-C45")
+@C2_FORMAT_LOADER.register("R-101-C45")
+@C2_FORMAT_LOADER.register("R-152-C45")
 @C2_FORMAT_LOADER.register("R-50-FPN")
 @C2_FORMAT_LOADER.register("R-101-FPN")
 @C2_FORMAT_LOADER.register("R-152-FPN")
@@ -189,7 +189,7 @@ def load_resnet_c2_format(cfg, f):
     state_dict = _load_c2_pickled_weights(f)
     conv_body = cfg.MODEL.ENCODER.BACKBONE.CONV_BODY
     # arch = conv_body.replace("-C4", "").replace("-C5", "").replace("-FPN", "")
-    arch = conv_body.replace("-C4", "").replace("-C5", "").replace("-FPN", "")
+    arch = conv_body.replace("-C45", "").replace("-C5", "").replace("-FPN", "")
     # arch = arch.replace("-RETINANET", "")
     stages = _C2_STAGE_NAMES[arch]
     state_dict = _rename_weights_for_resnet(state_dict, stages)

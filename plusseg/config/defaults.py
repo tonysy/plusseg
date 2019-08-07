@@ -14,9 +14,9 @@ _C.INPUT = CN()
 # Base size of the image during training
 _C.INPUT.IMAGE_SIZE = (480, 480)  # (height, width)
 # Values to be used for image normalization
-_C.INPUT.PIXEL_MEAN = [102.9801, 115.9465, 122.7717]
+# _C.INPUT.PIXEL_MEAN = [102.9801, 115.9465, 122.7717]
 # Values to be used for image normalization
-_C.INPUT.PIXEL_STD = [1., 1., 1.]
+# _C.INPUT.PIXEL_STD = [1., 1., 1.]
 # Convert image to BGR format (for Caffe2 models), in range 0-255
 # _C.INPUT.TO_BGR255 = True
 
@@ -55,7 +55,7 @@ _C.MODEL = CN()
 _C.MODEL.META_ARCHITECTURE = 'GeneralizeSegmentor'
 _C.MODEL.BATCH_NORM = 'SyncBatchNorm' # nn.BatchNorm2d
 _C.MODEL.DEVICE = "cuda"
-
+_C.MODEL.WEIGHT = ""
 # -----------------------------------------------------------------------------
 # Encoder Structure
 # -----------------------------------------------------------------------------
@@ -96,7 +96,8 @@ _C.MODEL.ENCODER.BACKBONE.RESNETS.DEFORMABLE_GROUPS = 1
 # -----------------------------------------------------------------------------
 _C.MODEL.DECODER = CN()
 _C.MODEL.DECODER.NAME = 'FCN'
-_C.MODEL.DECODER.AUX_FACTOR = 0.2
+_C.MODEL.DECODER.AUX_FACTOR = 0.4
+_C.MODEL.DECODER.IGNORE_INDEX = -1
 
 _C.MODEL.DECODER.FCN = CN()
 _C.MODEL.DECODER.FCN.IN_CHANNEL = 2048
@@ -112,13 +113,28 @@ _C.MODEL.POSTPROCESSOR.NAME = ''
 # Solver
 # -----------------------------------------------------------------------------
 _C.SOLVER = CN()
+_C.SOLVER.BASE_LR = 0.001
+_C.SOLVER.BIAS_LR_FACTOR = 2
 
 
+_C.SOLVER.MOMENTUM = 0.9
+_C.SOLVER.WEIGHT_DECAY = 0.0001
+_C.SOLVER.WEIGHT_DECAY_BIAS = 0
 
+_C.SOLVER.START_EPOCHS = 0
+_C.SOLVER.EPOCHS = 160
+_C.SOLVER.IMS_PER_BATCH = 16
+_C.SOLVER.LOGGER_INTERVAL = 10
 
+_C.SOLVER.LR_SCHEDULER = CN()
+_C.SOLVER.LR_SCHEDULER.MODE = 'poly'
+_C.SOLVER.LR_SCHEDULER.WARMUP_EPOCHS = 0
 # -----------------------------------------------------------------------------
 # Misc Options
 # -----------------------------------------------------------------------------
 _C.OUTPUT_DIR = "."
 
 _C.COLLECT_ENV_INFO = False
+_C.PATHS_CATALOG = os.path.join(os.path.dirname(__file__), "paths_catalog.py")
+_C.DTYPE = "float32"
+_C.PLOT_TB_CURVE = True

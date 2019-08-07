@@ -10,8 +10,8 @@ from . import fcn
 @registry.DECODERS.register('FCN')
 def build_fcn_decoder(cfg):
     decoder = fcn.FCN(cfg)
-    model = nn.Sequential(OrderedDict([('decoder', decoder)]))
-    return model
+    # model = nn.Sequential(OrderedDict([('decoder', decoder)]))
+    return decoder
     
 def build_decoder(cfg):
     assert cfg.MODEL.DECODER.NAME in registry.DECODERS, \

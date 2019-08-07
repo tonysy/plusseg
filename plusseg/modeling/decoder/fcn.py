@@ -32,9 +32,9 @@ class FCN(nn.Module):
             )
     
     def forward(self, x, imsize):
-        _, _, c4, c5 = x
+        if len(x) == 2:
+            c4, c5 = x[0], x[1]
         fcn_out = self.fcn_head(c5)
-
         fcn_out = F.interpolate(fcn_out, size=imsize, **self._up_kwargs)
         outputs = [fcn_out]
         if self.aux_factor > 0:
@@ -42,6 +42,7 @@ class FCN(nn.Module):
             aux_fcn_out = F.interpolate(aux_fcn_out, imsize, **self._up_kwargs)
             outputs.append(fcn_out)
         return tuple(outputs)
+
 
 class FCNHead(nn.Module):
     """

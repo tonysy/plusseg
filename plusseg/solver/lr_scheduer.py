@@ -16,11 +16,13 @@ class LRScheduler(object):
     """
     def __init__(self, cfg, iters_per_epoch=0):
         self.mode = cfg.SOLVER.LR_SCHEDULER.MODE # step, cosine, poly
-
         self.base_lr = cfg.SOLVER.BASE_LR
-        self.lr_decay_step =  cfg.SOLVER.LR_SCHEDULER.LR_DECAY_STEP
+        
         if self.mode == 'step':
+            self.lr_decay_step = cfg.SOLVER.LR_SCHEDULER.LR_DECAY_STEP
             assert self.lr_decay_step
+        else:
+            self.lr_decay_step = 0
 
         self.iters_per_epoch = iters_per_epoch
         self.total_iters = cfg.SOLVER.EPOCHS * iters_per_epoch
@@ -34,9 +36,9 @@ class LRScheduler(object):
         if self.mode == 'cos':
             lr = 0.5 * self.base_lr * (1 + math.cos(1.0 * current_iters / self.total_iters * math.pi))
         elif self.mode == 'poly':
-            lr = self.lr * pow((1 - 1.0 * current_iters / self.total_iters), 0.9)
+            lr = self.base_lr * pow((1 - 1.0 * current_iters / self.total_iters), 0.9)
         elif self.mode == 'step':
-            lr = self.lr * (0.1 ** epoch // self.lr_decay_step)
+            lr = self.base_lr * (0.1 ** epoch // self.lr_decay_step)
         else:
             raise NotImplementedError
         # warmup lr 
@@ -52,7 +54,8 @@ class LRScheduler(object):
         if len(optimizer.param_groups) == 1:
             optimizer.param_groups[0]['lr'] = lr 
         else:
-            print('Todo: Check which case use this kind of lr_scheduler')
+            # import pdb; pdb.set_trace()
+            # print('Todo: Check which case use this kind of lr_scheduler')
             optimizer.param_groups[0]['lr'] = lr
             for i in range(1, len(optimizer.param_groups)):
-                optimizer.param_groups[i]['lr'] = lr * 10
+                optimizer.param_groups[i]['lr'] = lr #* 10

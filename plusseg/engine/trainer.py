@@ -21,7 +21,7 @@ def reduce_loss_dict(loss_dict):
     with torch.no_grad():
         loss_names = []
         all_losses = []
-        for k in sorted(loss.keys()):
+        for k in sorted(loss_dict.keys()):
             loss_names.append(k)
             all_losses.append(loss_dict[k])
         
@@ -42,18 +42,19 @@ def do_train(
     scheduler,
     checkpointer,
     device,
-    checkpoint_period,
+    # checkpoint_period,
     arguments,
     total_iters,
+    no_validate,
     writer=None,
 ):
     logger = logging.getLogger('plusseg.trainer')
     logger.info(str(model))
     logger.info('Start Training')
 
-    meters = MetricLogger(delimier=" ")
+    meters = MetricLogger(delimiter="  ")
     max_epochs = arguments['epochs']
-    start_epochs = arguments['max_epochs']
+    start_epochs = arguments['start_epoch']
     iters_per_epoch = len(data_loader)
     logger_interval = arguments['logger_interval']
     
@@ -70,7 +71,7 @@ def do_train(
             images = images.to(device)
             targets = targets.to(device)
 
-            loss_dict = model(images, targets)
+            preds, loss_dict = model(images, targets)
             losses = sum(loss for loss in loss_dict.values())
 
             # reduced losses over all GPUs for logging purpose
@@ -85,10 +86,19 @@ def do_train(
             # doing nothing, otherwise apply loss scaling for mixed-precision recipe
             with amp.scale_loss(losses, optimizer) as scaled_losses:
                 scaled_losses.backward()
+            
+            # for key, paras in model.named_parameters():
+            #     if not paras.requires_grad:
+            #         print('before step',key, paras.requires_grad)
+            # import pdb; pdb.set_trace()
 
-            optimizer.backward()
+
+            optimizer.step()
+            # for key, paras in model.named_parameters():
+            #     if not paras.requires_grad:
+            #         print('after step',key, paras.requires_grad)
             batch_time = time.time() - end
-
+            end = time.time()
             meters.update(time=batch_time, data=data_time)
 
             eta_iterations = total_iters - epoch_idx * iters_per_epoch - iteration

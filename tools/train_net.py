@@ -37,11 +37,18 @@ except ImportError:
 
 def train(cfg, local_rank, distributed, no_validate):
     model = build_segmentation_model(cfg)
+    
     device = torch.device(cfg.MODEL.DEVICE)
     model.to(device)
-
+    
+    data_loader = make_data_loader(
+        cfg,
+        is_train=True,
+        is_distributed=distributed,
+    )
+    
     optimizer = make_optimizer(cfg, model)
-    scheduler = make_lr_scheduler(cfg, make_optimizer)
+    scheduler = make_lr_scheduler(cfg,len(data_loader))
 
     # Initialize mixed-precision training
     use_mixed_precision = cfg.DTYPE == 'float16'
@@ -51,42 +58,41 @@ def train(cfg, local_rank, distributed, no_validate):
     if distributed:
         model = torch.nn.parallel.DistributedDataParallel(
             model, device_ids=[local_rank], output_device=local_rank,
+            find_unused_parameters=True
         )
     
     arguments = {}
     arguments["iteration"] = 0
-
+    arguments['start_epoch'] = cfg.SOLVER.START_EPOCHS
+    arguments['epochs'] = cfg.SOLVER.EPOCHS
+    arguments['logger_interval'] = cfg.SOLVER.LOGGER_INTERVAL
+    
     output_dir = cfg.OUTPUT_DIR
 
     
     writer = SummaryWriter(output_dir) if cfg.PLOT_TB_CURVE else None
 
     save_to_disk = get_rank() == 0
-    checkpoint = SegmentationCheckpointer(
+    checkpointer = SegmentationCheckpointer(
         cfg, model, optimizer, scheduler, output_dir, save_to_disk
     )
     extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT)
     arguments.update(extra_checkpoint_data)
-
-    data_loader = make_data_loader(
-        cfg,
-        is_train=True,
-        is_distributed=distributed,
-    )
     
-    checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
+    # checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
 
     do_train(
         model,
-        data_laoder,
+        data_loader,
         optimizer,
         scheduler,
         checkpointer,
         device,
-        checkpoint_period,
+        # checkpoint_period,
         arguments,
+        scheduler.total_iters,
         no_validate,
-        writer
+        writer,
     )
 
     return model

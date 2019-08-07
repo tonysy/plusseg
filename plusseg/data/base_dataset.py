@@ -9,9 +9,15 @@ from PIL import Image, ImageOps, ImageFilter
 __all__ = ['BaseDataset', 'test_batchify_fn']
 
 class BaseDataset(data.Dataset):
-    def __init__(self, root, split, mode=None, transform=None,
-                    target_transform=None, base_size=520, crop_size=480):
-        self.root = root
+    def __init__(self, 
+        # root, 
+        split, 
+        mode=None, 
+        transform=None,
+        target_transform=None, 
+        base_size=520, 
+        crop_size=480):
+        # self.root = root
 
         self.transform = transform
         self.target_transform = target_transform
@@ -99,7 +105,7 @@ class BaseDataset(data.Dataset):
             img = img.filter(ImageFilter.GaussianBlur(radius=random.random()))
 
         # Final transform
-        return img, self.mask_transfrom(mask)
+        return img, self.mask_transform(mask)
     
     def mask_transform(self, mask):
         return torch.from_numpy(np.array(mask)).long()
