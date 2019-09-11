@@ -36,7 +36,9 @@ _C.DATASETS = CN()
 _C.DATASETS.TRAIN = ()
 # List of the dataset names for testing, as present in paths_catalog.py
 _C.DATASETS.TEST = ()
-
+_C.DATASETS.NUM_CLASS = 59
+_C.DATASETS.BASE_SIZE = 520
+_C.DATASETS.CROP_SIZE = 480
 # -----------------------------------------------------------------------------
 # DataLoader
 # -----------------------------------------------------------------------------
@@ -129,6 +131,11 @@ _C.SOLVER.LOGGER_INTERVAL = 10
 _C.SOLVER.LR_SCHEDULER = CN()
 _C.SOLVER.LR_SCHEDULER.MODE = 'poly'
 _C.SOLVER.LR_SCHEDULER.WARMUP_EPOCHS = 0
+
+_C.EVALUATOR = CN()
+_C.EVALUATOR.FLIP = True
+_C.EVALUATOR.SCLAES = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75]
+
 # -----------------------------------------------------------------------------
 # Misc Options
 # -----------------------------------------------------------------------------

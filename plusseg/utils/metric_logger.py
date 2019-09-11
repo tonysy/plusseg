@@ -1,7 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 from collections import defaultdict
 from collections import deque
-
+import threading
 import torch
 
 
@@ -64,3 +64,23 @@ class MetricLogger(object):
                 "{}: {:.4f} ({:.4f})".format(name, meter.median, meter.global_avg)
             )
         return self.delimiter.join(loss_str)
+
+
+class SemSegMetric(object):
+    """
+    Calculate the pixel accuracy and mIoU scores
+    """
+    def __init__(self, num_class):
+        self.num_class = num_class
+        self.lock = threading.Lock()
+        self.reset()
+    
+    def update(self, labels, preds):
+        def evaluate_worker(self, label, pred):
+            correct, labeled = batch_pix_accuracy(
+                pred, label
+            )
+            inter, union = batch_intersection_union(
+                pred, label, self.num_class
+            )
+
